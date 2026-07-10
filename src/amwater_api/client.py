@@ -190,7 +190,8 @@ class AmericanWaterAPI:
                     "zip": details.get("zip"),
                     "status": details.get("contractAccountStatus"),
                     "due_date": details.get("currentBillDueDate"),
-                    "total_due": details.get("totalDue", "").strip()
+                    "total_due": details.get("totalDue", "").strip(),
+                    "past_due": details.get("pastDue", "").strip()
                 }
         except aiohttp.ClientError as err:
             raise AmericanWaterConnectError(f"Connection error fetching account summary: {err}")
