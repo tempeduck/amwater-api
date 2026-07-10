@@ -191,7 +191,8 @@ class AmericanWaterAPI:
                     "status": details.get("contractAccountStatus"),
                     "due_date": details.get("currentBillDueDate"),
                     "total_due": details.get("totalDue", "").strip(),
-                    "past_due": details.get("pastDue", "").strip()
+                    "past_due": details.get("pastDue", "").strip(),
+                    "disconnected": details.get("disconnectedFlag", "") == "X"
                 }
         except aiohttp.ClientError as err:
             raise AmericanWaterConnectError(f"Connection error fetching account summary: {err}")
@@ -413,6 +414,82 @@ class AmericanWaterAPI:
             raise AmericanWaterConnectError(f"Connection error downloading PDF: {err}")
         except IOError as err:
             raise AmericanWaterError(f"Failed to write PDF file: {err}")
+
+    async def async_get_customer_profile(
+        self, bp: str, contract: str, premise: str
+    ) -> Dict[str, Any]:
+        """Fetch full customer profile data."""
+        session = await self._get_session()
+        headers = self._get_headers()
+        
+        body = {
+            "pipelineId": "com::apporchid::cloudseer::mso::customer_profile_pipeline",
+            "requestParameters": {
+                "@class": "com.apporchid.common.UIRequestParameters",
+                "keyValueMap": {
+                    "queryParams": {
+                        "businessPartnerNumber": bp,
+                        "connectionContractNumber": contract,
+                        "premiseId": premise
+                    }
+                }
+            }
+        }
+        
+        try:
+            async with session.post(
+                "https://mywaterv2.amwater.com/api/mso/data",
+                json=body,
+                headers=headers,
+                timeout=15
+            ) as res:
+                if res.status != 200:
+                    raise AmericanWaterConnectError(
+                        f"Failed to fetch customer profile: {res.status} {res.reason}"
+                    )
+                mso_data = await res.json()
+                
+                data_list = mso_data.get("data", [])
+                if not data_list:
+                    raise AmericanWaterError("No customer profile data found in response.")
+                    
+                profile = data_list[0]
+                return {
+                    "installation_number": profile.get("installationNumber"),
+                    "meter_location": profile.get("meterLocation"),
+                    "serial_number": profile.get("serialNumber"),
+                    "installation_date": profile.get("installationDate"),
+                    "meter_size": profile.get("meterSize"),
+                    "fullname": profile.get("fullname"),
+                    "paperless": profile.get("paperlessStatements"),
+                    "phone": profile.get("primaryPhone"),
+                    "customer_period": profile.get("customerPeriod"),
+                    "autopay": profile.get("autopayStatus"),
+                    "budget_billing": profile.get("budgetenrollStatus"),
+                    "water_service": profile.get("waterService"),
+                    "sewer_service": profile.get("sewerservice"),
+                    "low_income": profile.get("lowIncomeFlag"),
+                    "longitude": profile.get("longitude"),
+                    "latitude": profile.get("latitude"),
+                    "payment_term": profile.get("standardPaytermDesc"),
+                    "connection_status": profile.get("connectionStatus"),
+                }
+        except aiohttp.ClientError as err:
+            raise AmericanWaterConnectError(f"Connection error fetching customer profile: {err}")
+
+    async def async_get_active_alerts(self) -> List[Dict[str, Any]]:
+        """Fetch active alerts/outages from login.amwater.com."""
+        session = await self._get_session()
+        url = "https://login.amwater.com/api/getActiveAlerts"
+        try:
+            async with session.get(url, timeout=10) as res:
+                if res.status != 200:
+                    _LOGGER.warning("Failed to fetch alerts: %s", res.status)
+                    return []
+                return await res.json()
+        except Exception as err:
+            _LOGGER.warning("Error fetching active alerts: %s", err)
+            return []
 
     async def async_close(self) -> None:
         """Close the underlying session if we created it."""

@@ -38,11 +38,15 @@ async def main():
         summary = await api.async_get_account_summary()
         print("Account Summary:")
         print(json.dumps(summary, indent=2))
-        print()
-        
         bp = summary["business_partner"]
         contract = summary["contract_account"]
         premise = summary["premise"]
+
+        print("Retrieving Customer Profile...")
+        profile = await api.async_get_customer_profile(bp, contract, premise)
+        print("Customer Profile:")
+        print(json.dumps(profile, indent=2))
+        print()
         
         print(f"Retrieving 36 Months Consumption History for Premise {premise}...")
         history = await api.async_get_usage_history(bp, contract, premise, months=36)
@@ -64,6 +68,10 @@ async def main():
         print(f"Found {len(billing)} billing history entries. Latest transactions:")
         for item in billing[:5]:
             print(f"  {item['date']} - {item['type']}: ${item['amount']:.2f} (Status: {item['status'] or 'N/A'}, DocID: {item['doc_id'] or 'N/A'})")
+        print("Checking Active Outage and Service Alerts...")
+        alerts = await api.async_get_active_alerts()
+        print("Active Alerts:")
+        print(json.dumps(alerts, indent=2))
         print()
         
         # Download the latest PDF bill if any exists
