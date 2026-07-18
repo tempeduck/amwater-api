@@ -60,5 +60,5 @@ poetry run python3 main.py
 
 ## Active Handoff
 
-- **[2026-07-09 (Antigravity)]**: Re-architected the project from TypeScript/Playwright into a pure async Python library (`amwater-api`) using `aiohttp` and `poetry`. Verified end-to-end login, account summary parsing, 36-month chart retrieval, billing history collection, and clean PDF statement binary downloading. Tested successfully using `main.py` CLI. Pushed initial codebase to `tempeduck/amwater-api` and component to `tempeduck/amwater-hacs`.
-- **[2026-07-09 (Antigravity)]**: Added support for the customer profile pipeline (`customer_profile_pipeline`) and active alerts API (`getActiveAlerts`). Added a user-adjustable polling interval and PDF default save location via Home Assistant Options Flow, outages/connectivity binary sensors, and the custom `amwater.download_latest_bill` service. Saved all code updates locally.
+Current state, validation, open work, and operational risks are maintained in `handoff/ACTIVE.md`.
+Historical entries migrated on 2026-07-18 are preserved in `handoff/archive/CLAUDE-active-20260718.md`.
