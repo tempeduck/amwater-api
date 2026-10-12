@@ -56,3 +56,14 @@ docs/step*
 # Cache
 .pytest_cache/
 .mypy_cache/
+
+# Local-only workspace material and generated artifacts
+/AGENTS.md
+/CLAUDE.md
+/PROJECT_BRIEF.md
+/HANDOFF.md
+/handoff/
+
+# Local-only workspace material and generated artifacts
+/.venv*/
+.ruff_cache/
